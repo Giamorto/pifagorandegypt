@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Землемер Нила — Теорема Пифагора (3D)</title>
+<style>
+:root{
+  --sand:#e8c77d; --papyrus:#f4e6bd; --brown:#5a321c; --dark:#21150f; --gold:#d49a28;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#17100c;color:#2d1b11;font-family:Georgia,serif;overflow-x:hidden}
+.game{min-height:100vh;position:relative;background:linear-gradient(#dcae57 0%,#efd18a 22%,#e2bd70 55%,#c9a05c 100%);overflow:hidden}
+.header{padding:20px 5% 8px}
+h1{margin:0;color:#4a2816;font-size:34px;text-shadow:2px 2px #f6dfa5}
+.subtitle{font-size:15px;margin-top:4px;color:#68442a}
+.main{position:relative;z-index:2;display:flex;flex-direction:column;gap:18px;max-width:1320px;margin:6px auto 0;padding:0 20px 30px}
+.panel,.mission{background:rgba(247,232,191,.94);border:3px solid #73451f;box-shadow:0 8px 24px #57381655}
+.panel{border-radius:8px;padding:14px}
+.mission{border-radius:8px;padding:0}
+.mission summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;align-items:center;gap:10px;user-select:none}
+.mission summary::-webkit-details-marker{display:none}
+.mission summary h2{margin:0;color:#71421e;font-size:20px}
+.mission summary .arrow{margin-left:auto;font-size:14px;color:#8a5a1c;transition:transform .2s}
+.mission[open] summary .arrow{transform:rotate(90deg)}
+.mission summary:hover{background:rgba(200,137,31,.12)}
+.mission .missionBody{padding:0 18px 18px}
+.mission .goal{background:#e8cf91;border:2px solid #a57430;padding:12px;border-radius:6px;font-size:17px;line-height:1.35}
+.stage{position:relative;width:100%;aspect-ratio:16/10;border:2px solid #70451f;border-radius:5px;overflow:hidden;background:linear-gradient(#c8600f 0%,#e28a2e 28%,#eda856 55%,#c9a05c 100%);touch-action:none}
+.stage canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.stage:fullscreen{width:100vw;height:100vh;aspect-ratio:auto;border:none;border-radius:0}
+.stage:-webkit-full-screen{width:100vw;height:100vh;aspect-ratio:auto;border:none;border-radius:0}
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff4d3;background:#3a2412;font-size:15px;z-index:5}
+.loading.hide{display:none}
+.reticle-note{position:absolute;left:10px;top:10px;background:rgba(33,21,15,.55);color:#fbe8bb;font-size:12px;padding:5px 9px;border-radius:5px;pointer-events:none;line-height:1.4;max-width:220px}
+.dpad{position:absolute;right:12px;bottom:12px;display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,40px);gap:4px;z-index:4}
+.dpad button{background:rgba(90,50,24,.72);color:#fbe8bb;border:2px solid rgba(255,244,211,.5);border-radius:6px;font-size:17px;font-family:Georgia;cursor:pointer;user-select:none;touch-action:none}
+.dpad button:active{background:rgba(200,137,31,.85)}
+.tilt{position:absolute;left:12px;bottom:12px;display:flex;flex-direction:column;gap:4px;z-index:4}
+.tilt button{width:40px;height:40px;background:rgba(90,50,24,.72);color:#fbe8bb;border:2px solid rgba(255,244,211,.5);border-radius:6px;font-size:16px;cursor:pointer;user-select:none;touch-action:none}
+.tilt button:active{background:rgba(200,137,31,.85)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+button.ui{border:2px solid #613718;background:#c88e29;color:#fff4d3;padding:10px 14px;border-radius:6px;font-family:Georgia;font-size:15px;cursor:pointer;box-shadow:inset 0 1px #f6d98b}
+button.ui:hover{background:#a96f19}
+button.ui.secondary{background:#6f7b38}
+button.ui.horus{background:#176f87}
+button.ui.horus:hover{background:#125870}
+button.ui:disabled{opacity:.45;cursor:not-allowed}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.stat{background:#f8e8bd;border:1px solid #a67b3e;padding:8px;border-radius:5px}
+.stat b{display:block;font-size:20px;color:#613718}
+.legend{margin-top:10px;font-size:13px;color:#67462c;line-height:1.4}
+.parchment{margin-top:13px;padding:12px;background:#ead09a;border:1px dashed #87572c;line-height:1.45;font-size:14.5px}
+.hint{margin-top:12px;padding:11px 12px;border-radius:6px;background:#f1e0ab;border:2px solid #c79c47;font-size:14px;line-height:1.4;display:none}
+.hint.show{display:block}
+.hint.warn{background:#f0c2ae;border-color:#b6472a;color:#5a1c0e}
+.hint b{color:#71421e}
+.success{margin-top:12px;padding:12px;border-radius:6px;background:#dce2aa;border:2px solid #71813d;display:none}
+.success.show{display:block}
+.toast{position:absolute;top:14px;right:14px;max-width:230px;background:rgba(33,21,15,.94);color:#fbe8bb;border:2px solid #d49a28;border-radius:8px;padding:13px 15px;z-index:8;box-shadow:0 8px 20px rgba(0,0,0,.45);font-size:14px;line-height:1.4;font-family:Georgia,serif}
+.toast[hidden]{display:none}
+.toast .toastMsg{margin-bottom:10px}
+.toast .toastBtns{display:flex;gap:8px}
+.toast button{flex:1;padding:6px 8px;border-radius:6px;border:1px solid #d49a28;background:#3a2412;color:#fbe8bb;cursor:pointer;font-family:Georgia,serif;font-size:13px}
+.toast button:hover{background:#5a321c}
+@media(max-width:850px){.header h1{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="header">
+    <h1>Землемер Нила</h1>
+    <div class="subtitle">Испытание гарпедонапта · вид от первого лица — сверху не подглядеть</div>
+  </div>
+
+  <div class="main">
+    <section class="panel">
+      <div class="stage" id="stage">
+        <div class="loading" id="loading">Натягиваем верёвку…</div>
+        <div class="reticle-note">Веди мышью / пальцем — метка ложится на землю. Клик / тап — вбить колышек. Рука достаёт не дальше 10 м — подходи ближе.</div>
+        <div class="dpad" id="dpad">
+          <span></span><button data-k="fwd">▲</button><span></span>
+          <button data-k="left">◀</button><span></span><button data-k="right">▶</button>
+          <span></span><button data-k="back">▼</button><span></span>
+        </div>
+        <div class="tilt">
+          <button data-k="up">👁▲</button>
+          <button data-k="down">👁▼</button>
+        </div>
+        <div class="toast" id="toast" hidden>
+          <div class="toastMsg" id="toastMsg"></div>
+          <div class="toastBtns">
+            <button id="toastYes">Да</button>
+            <button id="toastNo">Нет</button>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ui secondary" id="undo">Убрать последний колышек</button>
+        <button class="ui" id="clear">Очистить поле</button>
+        <button class="ui" id="check">Проверить угол</button>
+        <button class="ui horus" id="horus" disabled>𓂀 Око Гора (взгляд сверху)</button>
+        <button class="ui secondary" id="soundToggle">🔊 Звук</button>
+        <button class="ui secondary" id="fsToggle">⛶ Полный экран</button>
+      </div>
+      <div class="stats">
+        <div class="stat">Колышков <b id="count">0 / 3</b></div>
+        <div class="stat">Стороны <b id="sides">—</b></div>
+        <div class="stat">Угол <b id="angle">—</b></div>
+        <div class="stat">Формула <b id="formula">—</b></div>
+      </div>
+      <div id="hint" class="hint"></div>
+      <div id="success" class="success">
+        <b>𓂀 Верно!</b><br>
+        Ты построил прямой угол. Для треугольника со сторонами 3, 4 и 5:
+        3² + 4² = 5². Землемер может использовать такую конструкцию,
+        чтобы восстановить границу участка после разлива Нила — даже
+        стоя на земле, без обзора сверху.
+      </div>
+      <div class="legend">Клавиатура: W/S или ▲▼ — шаг вперёд/назад, A/D — шаг в сторону, Q/E или ← → — повернуться, ↑ ↓ (или 👁▲ 👁▼) — чуть наклонить взгляд. Выше человеческого роста подняться нельзя. Пока не построишь треугольник, «Око Гора» недоступно: со своей точки на земле на глаз прямой угол не найти.</div>
+    </section>
+
+    <details class="mission">
+      <summary><h2>Задание фараона</h2><span class="arrow">▸</span></summary>
+      <div class="missionBody">
+      <div class="goal">
+        После разлива Нила границы поля исчезли. Тебе нужно восстановить
+        <b>прямой угол</b> между двумя границами участка — стоя прямо на
+        земле, без плана и без вида сверху.
+      </div>
+      <div class="parchment">
+        <b>Кто такой гарпедонапт</b><br>
+        <i>Гарпедонапт</i> (от др.-греч. ἁρπεδονάπτης — «натягивающий
+        верёвку») — древнеегипетский землемер и планировщик, который
+        измерял земельные участки и размечал фундаменты храмов и других
+        сооружений с помощью размеченных верёвок.
+      </div>
+      <div class="parchment">
+        <b>Секрет верёвки</b><br>
+        У тебя есть верёвка с <b>12 узлами</b>. Раздели её на отрезки
+        <b>3 : 4 : 5</b> и натяни между тремя колышками.
+        Если всё сделано правильно, угол получится 90°.
+      </div>
+      <div class="parchment">
+        <b>Как играть</b><br>
+        1. Поставь колышек A — где угодно.<br>
+        2. Веди руку от A: канат AB (5 узлов) провисает, пока не
+        натянут до конца, и дальше своей длины не пускает. Отпусти B.<br>
+        3. Тяни к C — сразу два каната (BC и замыкающий AC) провисают,
+        пока не натянуты до конца, и не пускают дальше своей длины.<br>
+        4. Нажми «Проверить угол», а затем «Око Гора», чтобы наконец
+        глянуть сверху и убедиться в результате.
+      </div>
+      <div class="parchment">
+        <b>Подсказка</b><br>
+        Не обязательно угадывать угол глазами — тем более что сверху
+        не видно. Проверь стороны:
+        <br><br><b>a² + b² = c²</b>
+      </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+var stage=document.getElementById('stage');
+var loading=document.getElementById('loading');
+var count=document.getElementById('count'), sides=document.getElementById('sides'),
+    angle=document.getElementById('angle'), formula=document.getElementById('formula'),
+    success=document.getElementById('success'), hint=document.getElementById('hint'),
+    horusBtn=document.getElementById('horus'), soundToggle=document.getElementById('soundToggle'),
+    toast=document.getElementById('toast'), toastMsg=document.getElementById('toastMsg'),
+    toastYes=document.getElementById('toastYes'), toastNo=document.getElementById('toastNo');
+
+if(typeof THREE==='undefined'){
+  loading.textContent='Не удалось загрузить 3D-библиотеку. Проверь соединение и перезагрузи страницу.';
+  return;
+}
+
+// ---------- sound (synthesized with Web Audio — no external files needed) ----------
+var soundOn=true, actx=null;
+function ensureAudio(){
+  if(!actx){
+    try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }
+    catch(e){ actx=null; }
+  }
+  if(actx && actx.state==='suspended'){ actx.resume(); }
+  return actx;
+}
+// dull thump when a peg is hammered into the ground
+function sfxThud(){
+  if(!soundOn) return;
+  var ctx=ensureAudio(); if(!ctx) return;
+  var t=ctx.currentTime;
+  var osc=ctx.createOscillator(); osc.type='sine';
+  osc.frequency.setValueAtTime(150,t);
+  osc.frequency.exponentialRampToValueAtTime(42,t+.14);
+  var g=ctx.createGain(); g.gain.setValueAtTime(.5,t); g.gain.exponentialRampToValueAtTime(.001,t+.22);
+  osc.connect(g); g.connect(ctx.destination); osc.start(t); osc.stop(t+.25);
+  var buf=ctx.createBuffer(1,Math.max(1,Math.floor(ctx.sampleRate*.08)),ctx.sampleRate);
+  var d=buf.getChannelData(0);
+  for(var i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+  var n=ctx.createBufferSource(); n.buffer=buf;
+  var nf=ctx.createBiquadFilter(); nf.type='lowpass'; nf.frequency.value=650;
+  var ng=ctx.createGain(); ng.gain.setValueAtTime(.3,t);
+  n.connect(nf); nf.connect(ng); ng.connect(ctx.destination); n.start(t);
+}
+// short rustle/creak as a rope pulls taut
+function sfxRope(){
+  if(!soundOn) return;
+  var ctx=ensureAudio(); if(!ctx) return;
+  var t=ctx.currentTime;
+  var buf=ctx.createBuffer(1,Math.max(1,Math.floor(ctx.sampleRate*.16)),ctx.sampleRate);
+  var d=buf.getChannelData(0);
+  for(var i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  var n=ctx.createBufferSource(); n.buffer=buf;
+  var f=ctx.createBiquadFilter(); f.type='bandpass'; f.Q.value=.7;
+  f.frequency.setValueAtTime(2400,t); f.frequency.exponentialRampToValueAtTime(950,t+.16);
+  var g=ctx.createGain(); g.gain.setValueAtTime(.0001,t);
+  g.gain.linearRampToValueAtTime(.16,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+.16);
+  n.connect(f); f.connect(g); g.connect(ctx.destination); n.start(t);
+}
+// bright arpeggio when the triangle closes on (almost exactly) 90°
+function sfxSuccess(){
+  if(!soundOn) return;
+  var ctx=ensureAudio(); if(!ctx) return;
+  var t=ctx.currentTime;
+  [523.25,659.25,783.99,1046.5].forEach(function(freq,i){
+    var start=t+i*.085;
+    var osc=ctx.createOscillator(); osc.type='triangle'; osc.frequency.value=freq;
+    var g=ctx.createGain(); g.gain.setValueAtTime(.0001,start);
+    g.gain.linearRampToValueAtTime(.26,start+.02);
+    g.gain.exponentialRampToValueAtTime(.0001,start+.5);
+    osc.connect(g); g.connect(ctx.destination); osc.start(start); osc.stop(start+.55);
+  });
+}
+soundToggle.onclick=function(){
+  soundOn=!soundOn;
+  soundToggle.textContent=soundOn?'🔊 Звук':'🔇 Звук';
+  if(soundOn) ensureAudio();
+};
+
+// ---------- basic scene ----------
+// UNIT = how many real-world metres one rope "узел" (knot) is worth. The
+// rope math itself still lives in knot-units (kept exact for the 3:4:5
+// check) — this just stretches the *world* it's placed in, so the plot
+// reads as a real field to walk across instead of a tabletop diorama.
+var UNIT=6;
+var FIELD=6.5*UNIT;       // radius of the (circular) playable plot, world metres
+function clampCircle(x,z,limit){
+  var d=Math.hypot(x,z);
+  if(d<=limit) return {x:x,z:z};
+  var k=limit/d;
+  return {x:x*k,z:z*k};
+}
+var EYE=1.7;              // human eye height — stays human, doesn't scale
+var REACH=10;               // arm's reach, in real metres — how far from the player a peg can go in
+var renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+stage.insertBefore(renderer.domElement,stage.firstChild);
+
+var scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0xd6873a,10*UNIT,46*UNIT); // warmer, more orange horizon to match the sky behind it
+
+var camera=new THREE.PerspectiveCamera(62,1,0.1,260);
+camera.rotation.order='YXZ';
+// spawn dead centre of the plot, facing the pyramid cluster on the horizon
+var yaw=3.0, pitch=-0.15;
+var camPos=new THREE.Vector3(0,EYE,0);
+camera.position.copy(camPos);
+
+scene.add(new THREE.HemisphereLight(0xfff1c2,0x7a5a2e,0.75));
+var sun=new THREE.DirectionalLight(0xfff0c0,0.95);
+sun.position.set(14*UNIT,20*UNIT,-8*UNIT);
+scene.add(sun);
+
+// ---------- ground (sandy field, Perlin-noise generated) ----------
+// Classic (Ken Perlin) 2D noise. Its lattice has an exact period of 256 in
+// raw coordinate units, so sampling at integer pixel coordinates times an
+// INTEGER frequency is automatically seamless across a canvas whose size is
+// itself a multiple of 256 — no manual edge-wrapping needed.
+var PERLIN_P=(function(){
+  var perm=[151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
+  var p=new Array(512);
+  for(var i=0;i<256;i++) p[256+i]=p[i]=perm[i];
+  return p;
+})();
+function fade(t){return t*t*t*(t*(t*6-15)+10);}
+function lerp(t,a,b){return a+t*(b-a);}
+function pgrad(hash,x,y){var h=hash&3,u=h<2?x:y,v=h<2?y:x;return ((h&1)?-u:u)+((h&2)?-2*v:2*v);}
+function perlin2(x,y){
+  var X=Math.floor(x)&255, Y=Math.floor(y)&255;
+  x-=Math.floor(x); y-=Math.floor(y);
+  var u=fade(x), v=fade(y), p=PERLIN_P;
+  var aa=p[p[X]+Y], ab=p[p[X]+Y+1], ba=p[p[X+1]+Y], bb=p[p[X+1]+Y+1];
+  return lerp(v, lerp(u,pgrad(aa,x,y),pgrad(ba,x-1,y)), lerp(u,pgrad(ab,x,y-1),pgrad(bb,x-1,y-1)));
+}
+// integer octave frequencies keep every octave individually seamless too.
+// The +0.37/+0.71 nudge matters: x and y are whole pixel indices and freq
+// is a whole number, so x*freq lands exactly on a lattice point — and
+// gradient noise is defined to be exactly 0 at every lattice point. Without
+// the offset every octave evaluates to 0 everywhere, which is exactly why
+// the ground came out flat yellow with no variation at all.
+function fbm(x,y,octaves,baseFreq){
+  var total=0,amp=1,maxAmp=0,freq=baseFreq;
+  for(var o=0;o<octaves;o++){
+    total+=perlin2(x*freq+0.37,y*freq+0.71)*amp;
+    maxAmp+=amp;amp*=0.5;freq*=2;
+  }
+  return total/maxAmp; // ~[-1,1]
+}
+function sandTextures(){
+  var size=512; // 2× the 256 lattice period → any integer frequency tiles cleanly
+  var c=document.createElement('canvas');c.width=c.height=size;
+  var g=c.getContext('2d');
+  var img=g.createImageData(size,size);
+  var bc=document.createElement('canvas');bc.width=bc.height=size;
+  var bg=bc.getContext('2d');
+  var bimg=bg.createImageData(size,size);
+  var base=[220,174,95]; // #dcae5f
+  for(var y=0;y<size;y++){
+    for(var x=0;x<size;x++){
+      var idx=(y*size+x)*4;
+      var dune=fbm(x,y,4,4);           // broad sun-bleached/wet dune tone
+      var grain=fbm(x+900,y+900,2,48); // fine grain-level variation
+      var tone=dune*46+grain*14;
+      img.data[idx]  =Math.max(0,Math.min(255,base[0]+tone));
+      img.data[idx+1]=Math.max(0,Math.min(255,base[1]+tone*0.9));
+      img.data[idx+2]=Math.max(0,Math.min(255,base[2]+tone*0.65));
+      img.data[idx+3]=255;
+      var h=fbm(x+300,y+300,3,10)*0.7+fbm(x+900,y+900,2,48)*0.3; // ripples + grain
+      var v=128+h*95;
+      bimg.data[idx]=bimg.data[idx+1]=bimg.data[idx+2]=Math.max(0,Math.min(255,v));
+      bimg.data[idx+3]=255;
+    }
+  }
+  g.putImageData(img,0,0);
+  bg.putImageData(bimg,0,0);
+  var diffuse=new THREE.CanvasTexture(c);
+  diffuse.wrapS=diffuse.wrapT=THREE.RepeatWrapping;
+  var bump=new THREE.CanvasTexture(bc);
+  bump.wrapS=bump.wrapT=THREE.RepeatWrapping;
+  return {diffuse:diffuse,bump:bump};
+}
+var groundSize=70*UNIT;
+var sandTex=sandTextures();
+sandTex.diffuse.repeat.set(groundSize/22,groundSize/22);
+sandTex.bump.repeat.set(groundSize/3,groundSize/3);
+var ground=new THREE.Mesh(
+  new THREE.PlaneGeometry(groundSize,groundSize),
+  new THREE.MeshStandardMaterial({map:sandTex.diffuse,bumpMap:sandTex.bump,bumpScale:.035,roughness:1})
+);
+ground.rotation.x=-Math.PI/2;
+scene.add(ground);
+
+// dashed boundary of the (round) playable plot
+(function(){
+  var pts=[];
+  var segs=96;
+  for(var i=0;i<=segs;i++){
+    var a=(i/segs)*Math.PI*2;
+    pts.push(new THREE.Vector3(Math.cos(a)*FIELD,0.02,Math.sin(a)*FIELD));
+  }
+  var g=new THREE.BufferGeometry().setFromPoints(pts);
+  var m=new THREE.LineDashedMaterial({color:0x9a6a28,dashSize:.35*UNIT,gapSize:.25*UNIT,linewidth:1});
+  var line=new THREE.Line(g,m);line.computeLineDistances();scene.add(line);
+})();
+
+// river — closer to the plot now, and on the opposite side from the
+// pyramids (the pyramids sit at positive z; the player spawns facing them,
+// so the Nile is now behind the spawn point, at negative z)
+var RIVER_Z=-13*UNIT;
+var river=new THREE.Mesh(
+  new THREE.PlaneGeometry(70*UNIT,9*UNIT),
+  new THREE.MeshStandardMaterial({color:0x1c7690,roughness:.25,metalness:.1,transparent:true,opacity:.9})
+);
+river.rotation.x=-Math.PI/2;river.position.set(0,0.01,RIVER_Z);
+scene.add(river);
+
+// pyramids + obelisk on the horizon
+function pyramid(x,z,r,h,color){
+  var m=new THREE.Mesh(new THREE.ConeGeometry(r,h,4),new THREE.MeshStandardMaterial({color:color,roughness:.95}));
+  m.rotation.y=Math.PI/4;m.position.set(x,h/2,z);scene.add(m);
+}
+pyramid(-16*UNIT,20*UNIT,6.2*UNIT,8.5*UNIT,0xc99b4c);
+pyramid(-6*UNIT,23*UNIT,4.4*UNIT,6*UNIT,0xb98b42);
+pyramid(13*UNIT,21*UNIT,5.4*UNIT,7.6*UNIT,0xc4924a);
+(function(){
+  var g=new THREE.Group();
+  var shaft=new THREE.Mesh(new THREE.BoxGeometry(0.7*UNIT,5*UNIT,0.7*UNIT),new THREE.MeshStandardMaterial({color:0xb98b42,roughness:.9}));
+  shaft.position.y=2.5*UNIT;g.add(shaft);
+  var cap=new THREE.Mesh(new THREE.ConeGeometry(0.55*UNIT,0.9*UNIT,4),new THREE.MeshStandardMaterial({color:0xd9a94f,roughness:.7}));
+  cap.rotation.y=Math.PI/4;cap.position.y=5.45*UNIT;g.add(cap);
+  g.position.set(9*UNIT,0,17*UNIT);scene.add(g);
+})();
+
+// reeds near the water (real-world sized plants — only their spread scales)
+for(var i=-30*UNIT;i<30*UNIT;i+=3.4*UNIT){
+  var reed=new THREE.Mesh(new THREE.PlaneGeometry(0.18,1.3),new THREE.MeshStandardMaterial({color:0x65733b,side:THREE.DoubleSide,roughness:1}));
+  reed.position.set(i+(Math.random()-.5)*UNIT,0.65,RIVER_Z+4.5*UNIT-2*UNIT-Math.random()*1.5*UNIT);
+  reed.rotation.y=Math.random();
+  scene.add(reed);
+}
+
+// sun
+var sunMesh=new THREE.Mesh(new THREE.SphereGeometry(1.4*UNIT,16,16),new THREE.MeshBasicMaterial({color:0xf7dc69}));
+sunMesh.position.set(14*UNIT,15*UNIT,-30*UNIT);scene.add(sunMesh);
+
+// ---------- game state (mirrors the 2D version's rope physics, now in XZ) ----------
+var pts=[];        // placed pegs, THREE.Vector3 with y=0
+var pegMeshes=[];  // {stake,knob,label}
+var ropeMeshes=[]; // finished ropes
+var previewGroup=new THREE.Group(); scene.add(previewGroup);
+var hover=null;    // current ground-aim point, THREE.Vector3|null
+var horusMode=false, horusT=0, savedCam=null;
+var outOfReachNow=false; // is the current aimed peg spot farther than REACH from the player?
+
+// ---------- "extend to a quadrilateral, then start a new plot" flow ----------
+// phase: 'placing' (normal 0-3 peg triangle) -> 'askQuad' (toast shown) ->
+// optionally 'placingFourth' (aiming D) -> 'askNewPlot' (toast shown) ->
+// back to 'placing' with the old plot left standing, or 'done' (stay put)
+var phase='placing';
+function canPlacePeg(){
+  return (phase==='placing' && pts.length<3) || (phase==='placingFourth' && pts.length===3);
+}
+function showToast(msg,onYes,onNo){
+  toastMsg.textContent=msg;
+  toast.hidden=false;
+  toastYes.onclick=function(){ toast.hidden=true; onYes&&onYes(); };
+  toastNo.onclick=function(){ toast.hidden=true; onNo&&onNo(); };
+}
+function afterTriangleBuilt(){
+  phase='askQuad';
+  showToast('Достроить до четырёхугольника?',
+    function(){ phase='placingFourth'; },
+    function(){ phase='placing'; askNewPlot(); }
+  );
+}
+function afterFourthPlaced(){
+  askNewPlot();
+}
+function askNewPlot(){
+  phase='askNewPlot';
+  showToast('Создать ещё участок?',
+    function(){ commitCurrentPlot(); },
+    function(){ phase='done'; }
+  );
+}
+// leaves the current pegs/ropes standing in the scene as a finished plot,
+// and resets just the tracking arrays so a fresh triangle can be built
+// elsewhere on the field
+function commitCurrentPlot(){
+  pegMeshes=[]; ropeMeshes=[]; pegAnims=[];
+  if(angleLabel){ scene.remove(angleLabel); angleLabel=null; }
+  pts.length=0;
+  wasOkSound=false;
+  phase='placing';
+  resetRopeTaut();
+  success.classList.remove('show');
+  updatePreview(); updateStats();
+}
+
+function dist(a,b){return Math.hypot(a.x-b.x,a.z-b.z);}      // raw world metres
+function kdist(a,b){return dist(a,b)/UNIT;}                   // distance in "узлы" (knots)
+function withinReach(p){return dist(camPos,p)<=REACH;}        // can the player's arm actually reach this ground point
+
+// AB is a fixed 3-knot rope from a single anchor (A) — it can go slack if
+// you place B closer than that, but it can never be pulled longer than 3.
+var AB_LEN=5, BC_LEN=4, AC_LEN=3;
+function clampSingle(p,A,maxKnots){
+  var max=maxKnots*UNIT;
+  var c=p.clone();
+  var dA=Math.hypot(c.x-A.x,c.z-A.z);
+  if(dA>max){var k=max/dA;c.x=A.x+(c.x-A.x)*k;c.z=A.z+(c.z-A.z)*k;}
+  var clamped=clampCircle(c.x,c.z,FIELD);c.x=clamped.x;c.z=clamped.z;
+  return c;
+}
+// maxA/maxB are given in knots (rope units); the clamp itself works in world metres.
+function clampToRope(p,A,maxAknots,B,maxBknots){
+  var maxA=maxAknots*UNIT, maxB=maxBknots*UNIT;
+  var c=p.clone();
+  for(var i=0;i<3;i++){
+    var dA=Math.hypot(c.x-A.x,c.z-A.z);
+    if(dA>maxA){var k=maxA/dA;c.x=A.x+(c.x-A.x)*k;c.z=A.z+(c.z-A.z)*k;}
+    var dB=Math.hypot(c.x-B.x,c.z-B.z);
+    if(dB>maxB){var k2=maxB/dB;c.x=B.x+(c.x-B.x)*k2;c.z=B.z+(c.z-B.z)*k2;}
+  }
+  var clamped=clampCircle(c.x,c.z,FIELD);c.x=clamped.x;c.z=clamped.z;
+  return c;
+}
+
+// ---- visual helpers ----
+function labelSprite(text){
+  var c=document.createElement('canvas');c.width=c.height=96;
+  var g=c.getContext('2d');
+  g.fillStyle='#fff0bd';g.font='bold 60px Georgia';g.textAlign='center';g.textBaseline='middle';
+  g.fillText(text,48,52);
+  var tex=new THREE.CanvasTexture(c);
+  var spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
+  spr.scale.set(.55,.55,1);
+  return spr;
+}
+// floating in-world readout of the angle at B, shown once the triangle closes
+function angleSprite(text,ok){
+  var c=document.createElement('canvas');c.width=340;c.height=140;
+  var g=c.getContext('2d');
+  g.fillStyle='rgba(33,21,15,.72)';
+  g.beginPath();g.roundRect?g.roundRect(6,6,328,128,18):g.rect(6,6,328,128);g.fill();
+  g.strokeStyle=ok?'#8fae4c':'#c97a4a';g.lineWidth=6;
+  g.beginPath();g.roundRect?g.roundRect(9,9,322,122,16):g.rect(9,9,322,122);g.stroke();
+  g.fillStyle=ok?'#c9e08a':'#f2b98a';
+  g.font='bold 78px Georgia';g.textAlign='center';g.textBaseline='middle';
+  g.fillText(text,170,72);
+  var tex=new THREE.CanvasTexture(c);
+  var spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
+  spr.scale.set(1.7,0.7,1);
+  return spr;
+}
+// angle at C (between CA and CB), shared by the label, the rope tint and
+// the success chime — null while the triangle isn't closed or is degenerate.
+// AB is now the closing rope of 5 knots (the hypotenuse), so the right
+// angle sits opposite it, at C, between the two 3- and 4-knot legs.
+function angleAtC(){
+  if(pts.length!==3) return null;
+  var A=pts[0],B=pts[1],C=pts[2];
+  var cax=A.x-C.x,caz=A.z-C.z, cbx=B.x-C.x,cbz=B.z-C.z;
+  var lca=Math.hypot(cax,caz), lcb=Math.hypot(cbx,cbz);
+  if(lca<1e-6||lcb<1e-6) return null;
+  var cosC=(cax*cbx+caz*cbz)/(lca*lcb);
+  return Math.acos(Math.max(-1,Math.min(1,cosC)))*180/Math.PI;
+}
+// angle at D (between DA and DB) — D mirrors C on the other side of AB,
+// pulled taut from A and B with the very same lengths (3 and 4), so it
+// forms a second right angle and the plot becomes a kite A-C-B-D-A
+function angleAtD(){
+  if(pts.length!==4) return null;
+  var A=pts[0],B=pts[1],D=pts[3];
+  var dax=A.x-D.x,daz=A.z-D.z, dbx=B.x-D.x,dbz=B.z-D.z;
+  var lda=Math.hypot(dax,daz), ldb=Math.hypot(dbx,dbz);
+  if(lda<1e-6||ldb<1e-6) return null;
+  var cosD=(dax*dbx+daz*dbz)/(lda*ldb);
+  return Math.acos(Math.max(-1,Math.min(1,cosD)))*180/Math.PI;
+}
+var angleLabel=null, wasOkSound=false;
+function updateAngleLabel(){
+  if(angleLabel){scene.remove(angleLabel);angleLabel=null;}
+  var degC=angleAtC();
+  if(degC===null){ wasOkSound=false; return; }
+  var ok=Math.abs(degC-90)<=1;
+  if(ok && !wasOkSound) sfxSuccess();
+  wasOkSound=ok;
+  var C=pts[2];
+  angleLabel=angleSprite(degC.toFixed(1)+'°',ok);
+  angleLabel.position.set(C.x,PEG_LABEL_Y+0.65,C.z);
+  scene.add(angleLabel);
+}
+// pegs are driven in, not spawned in place: they appear already pulled up
+// out of the ground, hold there a beat, then get hammered down to rest
+var PEG_LIFT=1.55, pegAnims=[];
+// shared peg model — sharpened point at the bottom (radiusBottom=0), like
+// an actual wooden stake ready to be driven in. opacity<1 makes a ghost
+// version for the aiming preview.
+// peg proportions, shared with the rope attachment height below
+var PEG_STAKE_H=0.95, PEG_KNOB_Y=PEG_STAKE_H+0.05, PEG_LABEL_Y=PEG_KNOB_Y+0.4;
+function buildPeg(letter,opacity,tint){
+  var ghost=opacity!==undefined;
+  var stakeHex=tint||0x60351b, knobHex=tint||0x9b6a27;
+  var g=new THREE.Group();
+  var stake=new THREE.Mesh(
+    new THREE.CylinderGeometry(.05,0,PEG_STAKE_H,8),
+    new THREE.MeshStandardMaterial({color:stakeHex,roughness:.9,transparent:ghost,opacity:ghost?opacity:1,depthWrite:!ghost})
+  );
+  stake.position.y=PEG_STAKE_H/2;g.add(stake);
+  var knob=new THREE.Mesh(
+    new THREE.SphereGeometry(.11,12,12),
+    new THREE.MeshStandardMaterial({color:knobHex,roughness:.6,transparent:ghost,opacity:ghost?opacity:1,depthWrite:!ghost})
+  );
+  knob.position.y=PEG_KNOB_Y;g.add(knob);
+  if(letter){
+    var lab=labelSprite(letter);
+    if(ghost){lab.material.transparent=true;lab.material.opacity=opacity;}
+    lab.position.y=PEG_LABEL_Y;g.add(lab);
+  }
+  return g;
+}
+function addPeg(p,letter){
+  var g=buildPeg(letter);
+  g.position.set(p.x,PEG_LIFT,p.z);
+  scene.add(g);
+  pegMeshes.push(g);
+  pegAnims.push({g:g,t:0,hold:.12,dur:.42});
+}
+// translucent "held above the ground, about to be driven in" preview peg
+function previewPegAt(point,letter,opacity,tint){
+  var g=buildPeg(letter,opacity,tint);
+  g.position.set(point.x,PEG_LIFT,point.z);
+  previewGroup.add(g);
+  return g;
+}
+function updatePegAnims(dt){
+  pegAnims=pegAnims.filter(function(a){
+    a.t+=dt;
+    var local=a.t-a.hold;
+    if(local<0){ a.g.position.y=PEG_LIFT; return true; }
+    var p=Math.min(local/a.dur,1);
+    var eased=p*p; // accelerates downward, like a hammer strike driving it in
+    a.g.position.y=PEG_LIFT*(1-eased);
+    if(p>=1 && !a.thudded){ a.thudded=true; sfxThud(); }
+    return p<1;
+  });
+}
+function qbez3(a,c,b,t){var mt=1-t;return new THREE.Vector3(mt*mt*a.x+2*mt*t*c.x+t*t*b.x, mt*mt*a.y+2*mt*t*c.y+t*t*b.y, mt*mt*a.z+2*mt*t*c.z+t*t*b.z);}
+function ropeMesh(a,b,slackUnits,tautHex,slackHex,radius,knots,opacity){
+  var s=Math.max(slackUnits,0); // slack, in knots
+  var sag=Math.min(s*0.4*UNIT,1.1*UNIT);
+  var ROPE_ATTACH_Y=PEG_KNOB_Y-0.15; // just below the knob, where the rope is actually tied
+  var startY=a.y+ROPE_ATTACH_Y, endY=b.y+ROPE_ATTACH_Y;
+  // a quadratic bezier's lowest point is exactly the midpoint of the start/
+  // end height and the control height — clamp the control so that midpoint
+  // never dips through the ground, however much slack there is
+  var GROUND_CLEARANCE=0.04;
+  var ctrlY=Math.max(-sag+0.15, GROUND_CLEARANCE*2-(startY+endY)/2);
+  var ctrl=new THREE.Vector3((a.x+b.x)/2,ctrlY,(a.z+b.z)/2);
+  var curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(a.x,startY,a.z),ctrl,new THREE.Vector3(b.x,endY,b.z));
+  var tube=new THREE.Mesh(
+    new THREE.TubeGeometry(curve,24,radius,8,false),
+    new THREE.MeshStandardMaterial({color: s<0.12?tautHex:slackHex, roughness:.85, transparent:opacity!==undefined, opacity: opacity!==undefined?opacity:1})
+  );
+  var group=new THREE.Group();group.add(tube);
+  if(knots){
+    for(var k=1;k<knots;k++){
+      var p=curve.getPoint(k/knots);
+      var dot=new THREE.Mesh(new THREE.SphereGeometry(.165,8,8),new THREE.MeshStandardMaterial({color:0xd6a44e}));
+      dot.position.copy(p);group.add(dot);
+    }
+  }
+  return group;
+}
+
+function clearGroup(g){while(g.children.length)g.remove(g.children[0]);}
+
+// rope colours when fully stretched: plain brown, no green "correct" tint
+// — a right angle just keeps the normal rope colour. A rope that IS fully
+// pulled to its own target length never burns red, whatever the angle:
+// the three target lengths (5,4,3) can only ever meet at a true right
+// angle, so if the angle is off, it's always because some OTHER rope
+// still has slack — that slack rope is the one flagged red, not the ones
+// already pulled correctly.
+var ROPE_TAUT_NEUTRAL=0x7a4b20, ROPE_TAUT_BAD=0xc0432a, ROPE_SLACK=0xa8472e;
+var PREVIEW_TAUT_NEUTRAL=0xc8891f, PREVIEW_TAUT_BAD=0xe0582c;
+var REACH_WARN_HEX=0xc0432a; // preview peg turns this red when the aimed spot is out of arm's reach
+function rebuildFinishedRopes(){
+  ropeMeshes.forEach(function(m){scene.remove(m);});
+  ropeMeshes=[];
+  if(pts.length>1){
+    var A=pts[0],B=pts[1];
+    var finishedSlackHex=ROPE_SLACK;
+    if(pts.length>=3){
+      var deg=angleAtC();
+      if(deg===null||Math.abs(deg-90)>1) finishedSlackHex=ROPE_TAUT_BAD;
+    }
+    var r1=ropeMesh(A,B,AB_LEN-kdist(A,B),ROPE_TAUT_NEUTRAL,finishedSlackHex,.05,4);
+    scene.add(r1);ropeMeshes.push(r1);
+    if(pts.length>=3){
+      var C=pts[2];
+      var r2=ropeMesh(B,C,BC_LEN-kdist(B,C),ROPE_TAUT_NEUTRAL,finishedSlackHex,.05,4);
+      var r3=ropeMesh(A,C,AC_LEN-kdist(A,C),ROPE_TAUT_NEUTRAL,finishedSlackHex,.05,4);
+      scene.add(r2);scene.add(r3);ropeMeshes.push(r2,r3);
+    }
+    if(pts.length===4){
+      // the 4th peg (D) mirrors C on the other side of AB — pulled from A
+      // and B with fixed lengths too, just the reverse of C's (AD=4, BD=3
+      // where C has AC=3, BC=4), forming a kite-shaped plot A-C-B-D-A
+      var D=pts[3];
+      var dFlagHex=ROPE_SLACK;
+      var degD=angleAtD();
+      if(degD===null||Math.abs(degD-90)>1) dFlagHex=ROPE_TAUT_BAD;
+      var r4=ropeMesh(A,D,BC_LEN-kdist(A,D),ROPE_TAUT_NEUTRAL,dFlagHex,.05,BC_LEN);
+      var r5=ropeMesh(B,D,AC_LEN-kdist(B,D),ROPE_TAUT_NEUTRAL,dFlagHex,.05,AC_LEN);
+      scene.add(r4);scene.add(r5);ropeMeshes.push(r4,r5);
+    }
+  }
+}
+
+// edge-triggered "rope just pulled taut" state, per segment, so the rustle
+// plays once per crossing rather than every mousemove frame
+var ropeTaut={ab:false,bc:false,ac:false,ad:false,bd:false};
+function resetRopeTaut(){ropeTaut.ab=ropeTaut.bc=ropeTaut.ac=ropeTaut.ad=ropeTaut.bd=false;}
+function updatePreview(){
+  clearGroup(previewGroup);
+  outOfReachNow=false;
+  if(horusMode || !hover){ updateHint(); return; }
+  if(pts.length===1){
+    var A0=pts[0];
+    var bPoint=clampSingle(hover,A0,AB_LEN);
+    outOfReachNow=!withinReach(bPoint);
+    var abSlack=AB_LEN-kdist(A0,bPoint);
+    var abTaut=abSlack<0.15;
+    if(abTaut && !ropeTaut.ab) sfxRope();
+    ropeTaut.ab=abTaut;
+    previewGroup.add(ropeMesh(A0,bPoint,abSlack,PREVIEW_TAUT_NEUTRAL,ROPE_SLACK,.05,AB_LEN));
+    previewPegAt(bPoint,'B',.62,outOfReachNow?REACH_WARN_HEX:undefined);
+  }else if(pts.length===2){
+    var A=pts[0],B=pts[1];
+    var c=clampToRope(hover,A,AC_LEN,B,BC_LEN);
+    outOfReachNow=!withinReach(c);
+    var bcSlack=BC_LEN-kdist(B,c), acSlack=AC_LEN-kdist(A,c);
+    var bcTaut=bcSlack<0.15, acTaut=acSlack<0.15;
+    if((bcTaut && !ropeTaut.bc)||(acTaut && !ropeTaut.ac)) sfxRope();
+    ropeTaut.bc=bcTaut; ropeTaut.ac=acTaut;
+    // live preview of whether THIS aim would land the angle in 89–91° — but
+    // a rope that's already pulled fully taut never burns red for it, only
+    // the still-slack one does (it's the one that still needs pulling)
+    var cax=A.x-c.x,caz=A.z-c.z, cbx=B.x-c.x,cbz=B.z-c.z;
+    var lca=Math.hypot(cax,caz), lcb=Math.hypot(cbx,cbz);
+    var previewSlackHex=ROPE_SLACK;
+    if(lca>1e-6&&lcb>1e-6){
+      var cosC=(cax*cbx+caz*cbz)/(lca*lcb);
+      var degCPreview=Math.acos(Math.max(-1,Math.min(1,cosC)))*180/Math.PI;
+      if(Math.abs(degCPreview-90)>1) previewSlackHex=PREVIEW_TAUT_BAD;
+    }
+    previewGroup.add(ropeMesh(B,c,bcSlack,PREVIEW_TAUT_NEUTRAL,previewSlackHex,.045,BC_LEN));
+    previewGroup.add(ropeMesh(A,c,acSlack,PREVIEW_TAUT_NEUTRAL,previewSlackHex,.045,AC_LEN));
+    previewPegAt(c,'C',.62,outOfReachNow?REACH_WARN_HEX:undefined);
+  }else if(pts.length===0 && hover){
+    outOfReachNow=!withinReach(hover);
+    previewPegAt(hover,'A',.62,outOfReachNow?REACH_WARN_HEX:undefined);
+  }else if(pts.length===3 && phase==='placingFourth'){
+    // D mirrors C: pulled taut from A and B with the very same fixed
+    // lengths (3 and 4) — same clamp, same physics, just the other side
+    var A3=pts[0],B3=pts[1];
+    var d=clampToRope(hover,A3,BC_LEN,B3,AC_LEN);
+    outOfReachNow=!withinReach(d);
+    var adSlack=BC_LEN-kdist(A3,d), bdSlack=AC_LEN-kdist(B3,d);
+    var adTaut=adSlack<0.15, bdTaut=bdSlack<0.15;
+    if((adTaut && !ropeTaut.ad)||(bdTaut && !ropeTaut.bd)) sfxRope();
+    ropeTaut.ad=adTaut; ropeTaut.bd=bdTaut;
+    var dax=A3.x-d.x,daz=A3.z-d.z, dbx=B3.x-d.x,dbz=B3.z-d.z;
+    var lda=Math.hypot(dax,daz), ldb=Math.hypot(dbx,dbz);
+    var previewSlackHexD=ROPE_SLACK;
+    if(lda>1e-6&&ldb>1e-6){
+      var cosD=(dax*dbx+daz*dbz)/(lda*ldb);
+      var degDPreview=Math.acos(Math.max(-1,Math.min(1,cosD)))*180/Math.PI;
+      if(Math.abs(degDPreview-90)>1) previewSlackHexD=PREVIEW_TAUT_BAD;
+    }
+    previewGroup.add(ropeMesh(A3,d,adSlack,PREVIEW_TAUT_NEUTRAL,previewSlackHexD,.045,BC_LEN));
+    previewGroup.add(ropeMesh(B3,d,bdSlack,PREVIEW_TAUT_NEUTRAL,previewSlackHexD,.045,AC_LEN));
+    previewPegAt(d,'D',.62,outOfReachNow?REACH_WARN_HEX:undefined);
+  }
+  updateHint();
+}
+
+function updateHint(){
+  if(outOfReachNow){
+    hint.innerHTML='Слишком далеко — рука достаёт не дальше <b>10 м</b>. Подойди ближе к месту колышка.';
+    hint.classList.add('show','warn');
+    return;
+  }
+  hint.classList.remove('warn');
+  if(pts.length===0){hint.classList.remove('show');}
+  else if(pts.length===1){
+    hint.innerHTML='Веди руку от <b>A</b> — канат <b>AB</b> длиной 5 узлов провисает, пока не натянут до конца, и дальше своей длины не пускает.';
+    hint.classList.add('show');
+  }else if(pts.length===2){
+    hint.innerHTML='Отрезок <b>AB = 5</b>. Тяни к <b>C</b> — <b>BC = 4</b> и замыкающая <b>AC = 3</b> не тянутся дальше своей длины.';
+    hint.classList.add('show');
+  }else if(pts.length===3 && phase==='placingFourth'){
+    hint.innerHTML='Колышек <b>D</b> — зеркало <b>C</b> по другую сторону от <b>AB</b>: тяни от A и B — <b>AD = 4</b> и <b>BD = 3</b> так же не тянутся дальше своей длины.';
+    hint.classList.add('show');
+  }else{hint.classList.remove('show');}
+}
+
+function updateStats(){
+  var target=(phase==='placingFourth'||pts.length>=4)?4:3;
+  count.textContent=pts.length+' / '+target;
+  if(pts.length>=3){
+    var d=[kdist(pts[0],pts[1]),kdist(pts[1],pts[2]),kdist(pts[2],pts[0])].sort(function(a,b){return a-b;});
+    sides.textContent=d.map(function(v){return v.toFixed(1);}).join(' : ');
+    var cos=(d[0]*d[0]+d[1]*d[1]-d[2]*d[2])/(2*d[0]*d[1]);
+    var deg=Math.acos(Math.max(-1,Math.min(1,cos)))*180/Math.PI;
+    angle.textContent=deg.toFixed(1)+'°';
+    formula.textContent=d[0].toFixed(1)+'² + '+d[1].toFixed(1)+'² '+(Math.abs(d[0]*d[0]+d[1]*d[1]-d[2]*d[2])<0.5?'= ':'≠ ')+d[2].toFixed(1)+'²';
+  }else{sides.textContent='—';angle.textContent='—';formula.textContent='—';}
+  horusBtn.disabled=pts.length<3;
+  updateHint();
+  updateAngleLabel();
+}
+
+// ---------- input: mouse/touch aims & places pegs; buttons move/look ----------
+function ndcFromEvent(clientX,clientY){
+  var r=renderer.domElement.getBoundingClientRect();
+  return {x:((clientX-r.left)/r.width)*2-1, y:-((clientY-r.top)/r.height)*2+1};
+}
+var rayc=new THREE.Raycaster();
+function groundHit(ndc){
+  rayc.setFromCamera(ndc,camera);
+  var dir=rayc.ray.direction, o=rayc.ray.origin;
+  if(Math.abs(dir.y)<1e-5) return null;
+  var t=-o.y/dir.y;
+  if(t<0) return null;
+  return new THREE.Vector3(o.x+dir.x*t,0,o.z+dir.z*t);
+}
+function updateHoverFromEvent(e){
+  if(!canPlacePeg()||horusMode) return;
+  var touch=e.touches&&e.touches[0];
+  var cx=touch?touch.clientX:e.clientX, cy=touch?touch.clientY:e.clientY;
+  var h=groundHit(ndcFromEvent(cx,cy));
+  if(h){hover=h;updatePreview();}
+}
+renderer.domElement.addEventListener('pointermove',updateHoverFromEvent);
+renderer.domElement.addEventListener('touchmove',updateHoverFromEvent,{passive:true});
+renderer.domElement.addEventListener('pointerleave',function(){hover=null;updatePreview();});
+
+function placePeg(){
+  if(!canPlacePeg()||horusMode||!hover) return;
+  ensureAudio(); // unlock/resume audio inside this user-gesture handler
+  var p;
+  if(pts.length===0){ p=hover.clone(); }
+  else if(pts.length===1){ p=clampSingle(hover,pts[0],AB_LEN); }
+  else if(pts.length===2){ var A=pts[0],B=pts[1]; p=clampToRope(hover,A,AC_LEN,B,BC_LEN); }
+  else { var A4=pts[0],B4=pts[1]; p=clampToRope(hover,A4,BC_LEN,B4,AC_LEN); } // 4th peg (D): AD=4, BD=3 (the reverse of C's AC=3, BC=4)
+  if(!withinReach(p)) return; // out of arm's reach — the hint is already flashing red
+  pts.push(p);
+  addPeg(p,String.fromCharCode(65+pts.length-1));
+  rebuildFinishedRopes();
+  resetRopeTaut();
+  success.classList.remove('show');
+  updatePreview();updateStats();
+  if(pts.length===3 && phase==='placing') afterTriangleBuilt();
+  else if(pts.length===4 && phase==='placingFourth') afterFourthPlaced();
+}
+renderer.domElement.addEventListener('click',placePeg);
+renderer.domElement.addEventListener('touchend',function(e){ e.preventDefault(); placePeg(); },{passive:false});
+
+document.getElementById('undo').onclick=function(){
+  toast.hidden=true; phase='placing';
+  pts.pop();
+  var m=pegMeshes.pop();
+  if(m){ scene.remove(m); pegAnims=pegAnims.filter(function(a){return a.g!==m;}); }
+  rebuildFinishedRopes();resetRopeTaut();success.classList.remove('show');updatePreview();updateStats();
+};
+document.getElementById('clear').onclick=function(){
+  toast.hidden=true; phase='placing';
+  pts.length=0;
+  pegMeshes.forEach(function(m){scene.remove(m);});pegMeshes=[];pegAnims=[];
+  rebuildFinishedRopes();resetRopeTaut();hover=null;success.classList.remove('show');updatePreview();updateStats();
+};
+document.getElementById('check').onclick=function(){
+  ensureAudio();
+  if(pts.length<3){alert('Сначала поставь три колышка.');return;}
+  var d=[kdist(pts[0],pts[1]),kdist(pts[1],pts[2]),kdist(pts[2],pts[0])].sort(function(a,b){return a-b;});
+  var ok=Math.abs(d[0]*d[0]+d[1]*d[1]-d[2]*d[2])<0.5;
+  if(ok) sfxSuccess();
+  success.classList.toggle('show',ok);
+  if(!ok) alert('Пока не прямой угол — какая-то верёвка ещё провисает или отрезки не 3:4:5.');
+};
+
+// ---- movement / look (keys + on-screen d-pad; never lets pitch reach top-down) ----
+var PITCH_MIN=-1.05, PITCH_MAX=0.5;
+var keys={};
+// e.key depends on the active keyboard layout (on a Cyrillic layout the
+// physical W/A/S/D keys report "ц/ф/ы/в", not "w/a/s/d"), so movement keys
+// are read from e.code — the physical key position — which is layout-proof.
+var CODE_MAP={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyQ:'q',KeyE:'e',ArrowUp:'arrowup',ArrowDown:'arrowdown',ArrowLeft:'arrowleft',ArrowRight:'arrowright'};
+var GAME_CODES=['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'];
+window.addEventListener('keydown',function(e){
+  var k=CODE_MAP[e.code]||e.key.toLowerCase();
+  keys[k]=true;
+  if(k==='arrowup') keys.up=true;
+  if(k==='arrowdown') keys.down=true;
+  if(GAME_CODES.indexOf(e.code)!==-1) e.preventDefault(); // stop the page from scrolling under the game
+});
+window.addEventListener('keyup',function(e){
+  var k=CODE_MAP[e.code]||e.key.toLowerCase();
+  keys[k]=false;
+  if(k==='arrowup') keys.up=false;
+  if(k==='arrowdown') keys.down=false;
+});
+// keyboard events need the stage to actually have focus first
+stage.setAttribute('tabindex','0');
+stage.style.outline='none';
+stage.addEventListener('pointerdown',function(){stage.focus();});
+window.addEventListener('load',function(){stage.focus();});
+stage.focus();
+document.querySelectorAll('.dpad button,.tilt button').forEach(function(btn){
+  var k=btn.getAttribute('data-k');
+  ['pointerdown'].forEach(function(ev){btn.addEventListener(ev,function(e){e.preventDefault();keys[k]=true;});});
+  ['pointerup','pointerleave','pointercancel'].forEach(function(ev){btn.addEventListener(ev,function(){keys[k]=false;});});
+});
+function isDown(k){return !!keys[k];}
+
+document.getElementById('horus').onclick=function(){
+  if(horusMode) return;
+  horusMode=true;hover=null;clearGroup(previewGroup);
+  savedCam={yaw:yaw,pitch:pitch,pos:camPos.clone()};
+  horusT=0;
+  var note=document.createElement('button');
+  note.className='ui secondary';note.id='backToGround';note.textContent='Вернуться на землю';
+  note.style.marginTop='0';
+  document.querySelector('.controls').appendChild(note);
+  note.onclick=function(){
+    horusMode=false;note.remove();
+    yaw=savedCam.yaw;pitch=savedCam.pitch;camPos.copy(savedCam.pos);
+  };
+};
+
+// ---------- render loop ----------
+var clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  var dt=Math.min(clock.getDelta(),.05);
+  updatePegAnims(dt);
+
+  if(horusMode){
+    horusT=Math.min(horusT+dt/1.1,1);
+    var e=horusT<1 ? 1-Math.pow(1-horusT,3) : 1;
+    var targetYaw=yaw, targetPitch=-1.52;
+    // high enough that the whole plot fits inside the vertical FOV
+    var horusHeight=(FIELD+4)/Math.tan(31*Math.PI/180);
+    var targetPos=new THREE.Vector3(0,horusHeight,0.001);
+    yaw=savedCam.yaw+(targetYaw-savedCam.yaw)*0; // keep facing consistent
+    pitch=savedCam.pitch+(targetPitch-savedCam.pitch)*e;
+    camPos.lerpVectors(savedCam.pos,targetPos,e);
+  }else{
+    var turnSpeed=1.5,pitchSpeed=1.1,speed=4.3;
+    if(isDown('left')||isDown('arrowleft')||isDown('q')) yaw+=turnSpeed*dt;
+    if(isDown('right')||isDown('arrowright')||isDown('e')) yaw-=turnSpeed*dt;
+    if(isDown('up')) pitch=Math.min(PITCH_MAX,pitch+pitchSpeed*dt);
+    if(isDown('down')) pitch=Math.max(PITCH_MIN,pitch-pitchSpeed*dt);
+    var fwd=(isDown('fwd')||isDown('w')?1:0)-(isDown('back')||isDown('s')?1:0);
+    var strafe=(isDown('d')?1:0)-(isDown('a')?1:0);
+    if(fwd||strafe){
+      var fx=-Math.sin(yaw), fz=-Math.cos(yaw);
+      var rx=Math.cos(yaw), rz=-Math.sin(yaw);
+      camPos.x+=(fx*fwd+rx*strafe)*speed*dt;
+      camPos.z+=(fz*fwd+rz*strafe)*speed*dt;
+      var lim=FIELD+UNIT*1.5;
+      var walkClamped=clampCircle(camPos.x,camPos.z,lim);
+      camPos.x=walkClamped.x;camPos.z=walkClamped.z;
+      if(hover) updatePreview(); // walking changes distance-to-target, so re-check reach live
+    }
+  }
+  camera.rotation.y=yaw;camera.rotation.x=pitch;
+  camera.position.copy(camPos);
+  renderer.render(scene,camera);
+}
+
+function resize(){
+  var w=stage.clientWidth,h=stage.clientHeight;
+  if(!w||!h) return;
+  renderer.setSize(w,h);
+  camera.aspect=w/h;camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',resize);
+resize();
+
+// ---------- fullscreen toggle ----------
+var fsToggle=document.getElementById('fsToggle');
+function isFullscreen(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
+fsToggle.onclick=function(){
+  if(!isFullscreen()){
+    var req=stage.requestFullscreen||stage.webkitRequestFullscreen;
+    if(req) req.call(stage);
+  }else{
+    var exit=document.exitFullscreen||document.webkitExitFullscreen;
+    if(exit) exit.call(document);
+  }
+};
+['fullscreenchange','webkitfullscreenchange'].forEach(function(ev){
+  document.addEventListener(ev,function(){
+    fsToggle.textContent=isFullscreen()?'⛶ Выйти из полного экрана':'⛶ Полный экран';
+    setTimeout(resize,50); // let the browser finish resizing the element first
+  });
+});
+loading.classList.add('hide');
+updateStats();
+animate();
+})();
+</script>
+</body>
+</html>
