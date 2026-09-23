@@ -9,57 +9,38 @@
   --sand:#e8c77d; --papyrus:#f4e6bd; --brown:#5a321c; --dark:#21150f; --gold:#d49a28;
 }
 *{box-sizing:border-box}
-body{margin:0;background:#17100c;color:#2d1b11;font-family:Georgia,serif;overflow-x:hidden}
-.game{min-height:100vh;position:relative;background:linear-gradient(#dcae57 0%,#efd18a 22%,#e2bd70 55%,#c9a05c 100%);overflow:hidden}
-.header{padding:20px 5% 8px}
-h1{margin:0;color:#4a2816;font-size:34px;text-shadow:2px 2px #f6dfa5}
-.subtitle{font-size:15px;margin-top:4px;color:#68442a}
-.main{position:relative;z-index:2;display:flex;flex-direction:column;gap:18px;max-width:1320px;margin:6px auto 0;padding:0 20px 30px}
-.panel,.mission{background:rgba(247,232,191,.94);border:3px solid #73451f;box-shadow:0 8px 24px #57381655}
-.panel{border-radius:8px;padding:14px}
-.mission{border-radius:8px;padding:0}
-.mission summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;align-items:center;gap:10px;user-select:none}
-.mission summary::-webkit-details-marker{display:none}
-.mission summary h2{margin:0;color:#71421e;font-size:20px}
-.mission summary .arrow{margin-left:auto;font-size:14px;color:#8a5a1c;transition:transform .2s}
-.mission[open] summary .arrow{transform:rotate(90deg)}
-.mission summary:hover{background:rgba(200,137,31,.12)}
-.mission .missionBody{padding:0 18px 18px}
-.mission .goal{background:#e8cf91;border:2px solid #a57430;padding:12px;border-radius:6px;font-size:17px;line-height:1.35}
-.stage{position:relative;width:100%;aspect-ratio:16/10;border:2px solid #70451f;border-radius:5px;overflow:hidden;background:linear-gradient(#c8600f 0%,#e28a2e 28%,#eda856 55%,#c9a05c 100%);touch-action:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#17100c;color:#2d1b11;font-family:Georgia,serif}
+.stage{position:fixed;inset:0;width:100vw;height:100dvh;background:linear-gradient(#c8600f 0%,#e28a2e 28%,#eda856 55%,#c9a05c 100%);touch-action:none}
 .stage canvas{display:block;width:100%;height:100%;cursor:crosshair}
-.stage:fullscreen{width:100vw;height:100vh;aspect-ratio:auto;border:none;border-radius:0}
-.stage:-webkit-full-screen{width:100vw;height:100vh;aspect-ratio:auto;border:none;border-radius:0}
 .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff4d3;background:#3a2412;font-size:15px;z-index:5}
 .loading.hide{display:none}
-.hudTop{position:absolute;left:10px;top:10px;z-index:6;display:flex;flex-direction:column;gap:6px;max-width:230px}
+.hudTop{position:absolute;left:10px;top:10px;z-index:6;display:flex;flex-direction:column;gap:6px;max-width:250px}
 .reticle-note{background:rgba(33,21,15,.55);color:#fbe8bb;font-size:12px;padding:5px 9px;border-radius:5px;pointer-events:none;line-height:1.4}
+.statsLine{background:rgba(33,21,15,.6);color:#fbe8bb;font-size:12px;padding:6px 9px;border-radius:5px;line-height:1.5;pointer-events:none}
+.statsLine b{color:#f2c879}
 .toolbar{display:flex;flex-wrap:wrap;gap:5px;pointer-events:auto}
 .toolbar button{padding:5px 8px;font-size:12px;border-radius:5px;box-shadow:none}
 .toolbar button:disabled{opacity:.45;cursor:not-allowed}
-.dpad{position:absolute;right:12px;bottom:12px;display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,40px);gap:4px;z-index:4}
-.dpad button{background:rgba(90,50,24,.72);color:#fbe8bb;border:2px solid rgba(255,244,211,.5);border-radius:6px;font-size:17px;font-family:Georgia;cursor:pointer;user-select:none;touch-action:none}
-.dpad button:active{background:rgba(200,137,31,.85)}
-.tilt{position:absolute;left:12px;bottom:12px;display:flex;flex-direction:column;gap:4px;z-index:4}
-.tilt button{width:40px;height:40px;background:rgba(90,50,24,.72);color:#fbe8bb;border:2px solid rgba(255,244,211,.5);border-radius:6px;font-size:16px;cursor:pointer;user-select:none;touch-action:none}
-.tilt button:active{background:rgba(200,137,31,.85)}
-.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.crosshair{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%);pointer-events:none;z-index:4;transition:opacity .15s}
+.crosshair::before,.crosshair::after{content:"";position:absolute;background:#fff4d3;box-shadow:0 0 2px rgba(0,0,0,.9)}
+.crosshair::before{left:50%;top:2px;bottom:2px;width:2px;transform:translateX(-50%)}
+.crosshair::after{top:50%;left:2px;right:2px;height:2px;transform:translateY(-50%)}
+.crosshair.warn::before,.crosshair.warn::after{background:#ff6a4a}
+.crosshair.hide{opacity:0}
+.lookHint{position:absolute;left:50%;top:57%;transform:translateX(-50%);background:rgba(33,21,15,.62);color:#fbe8bb;font-size:12px;padding:5px 10px;border-radius:5px;pointer-events:none;z-index:4;white-space:nowrap;transition:opacity .15s}
+.lookHint.hide{opacity:0}
 button.ui{border:2px solid #613718;background:#c88e29;color:#fff4d3;padding:10px 14px;border-radius:6px;font-family:Georgia;font-size:15px;cursor:pointer;box-shadow:inset 0 1px #f6d98b}
 button.ui:hover{background:#a96f19}
 button.ui.secondary{background:#6f7b38}
 button.ui.horus{background:#176f87}
 button.ui.horus:hover{background:#125870}
 button.ui:disabled{opacity:.45;cursor:not-allowed}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.stat{background:#f8e8bd;border:1px solid #a67b3e;padding:8px;border-radius:5px}
-.stat b{display:block;font-size:20px;color:#613718}
-.legend{margin-top:10px;font-size:13px;color:#67462c;line-height:1.4}
-.parchment{margin-top:13px;padding:12px;background:#ead09a;border:1px dashed #87572c;line-height:1.45;font-size:14.5px}
-.hint{margin-top:12px;padding:11px 12px;border-radius:6px;background:#f1e0ab;border:2px solid #c79c47;font-size:14px;line-height:1.4;display:none}
+.bottomHud{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:8px;max-width:92vw}
+.hint{padding:9px 14px;border-radius:6px;background:rgba(241,224,171,.96);border:2px solid #c79c47;font-size:13px;line-height:1.4;display:none;text-align:center}
 .hint.show{display:block}
-.hint.warn{background:#f0c2ae;border-color:#b6472a;color:#5a1c0e}
+.hint.warn{background:rgba(240,194,174,.96);border-color:#b6472a;color:#5a1c0e}
 .hint b{color:#71421e}
-.success{margin-top:12px;padding:12px;border-radius:6px;background:#dce2aa;border:2px solid #71813d;display:none}
+.success{padding:10px 16px;border-radius:6px;background:rgba(220,226,170,.97);border:2px solid #71813d;display:none;text-align:center;font-size:13px;line-height:1.4;max-width:520px}
 .success.show{display:block}
 .toast{position:absolute;top:14px;right:14px;max-width:230px;background:rgba(33,21,15,.94);color:#fbe8bb;border:2px solid #d49a28;border-radius:8px;padding:13px 15px;z-index:8;box-shadow:0 8px 20px rgba(0,0,0,.45);font-size:14px;line-height:1.4;font-family:Georgia,serif}
 .toast[hidden]{display:none}
@@ -67,107 +48,78 @@ button.ui:disabled{opacity:.45;cursor:not-allowed}
 .toast .toastBtns{display:flex;gap:8px}
 .toast button{flex:1;padding:6px 8px;border-radius:6px;border:1px solid #d49a28;background:#3a2412;color:#fbe8bb;cursor:pointer;font-family:Georgia,serif;font-size:13px}
 .toast button:hover{background:#5a321c}
-@media(max-width:850px){.header h1{font-size:26px}}
+.controlsSplash{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:7;background:rgba(33,21,15,.88);color:#fbe8bb;border:2px solid #d49a28;border-radius:10px;padding:18px 28px;text-align:center;font-family:Georgia,serif;box-shadow:0 10px 30px rgba(0,0,0,.5);pointer-events:none;opacity:1;transition:opacity .8s ease}
+.controlsSplash.hide{opacity:0}
+.controlsSplash .csTitle{font-size:18px;margin-bottom:10px;color:#f2c879;letter-spacing:.5px}
+.controlsSplash .csRow{font-size:15px;margin-top:6px;line-height:1.5}
+.controlsSplash kbd{display:inline-block;min-width:1.4em;background:rgba(255,244,211,.15);border:1px solid rgba(255,244,211,.45);border-radius:4px;padding:2px 6px;font-family:Georgia,serif;font-weight:bold;margin:0 1px}
+.hotbar{display:flex;gap:4px;background:rgba(20,12,7,.55);padding:5px;border-radius:6px;pointer-events:none}
+.hotbar .slot{position:relative;width:46px;height:46px;background:rgba(60,40,20,.65);border:2px solid rgba(20,12,6,.8);box-shadow:inset 0 0 0 1px rgba(255,244,211,.15);border-radius:3px;display:flex;align-items:center;justify-content:center}
+.hotbar .slot.sel{border-color:#fbe8bb;box-shadow:0 0 0 2px rgba(251,232,187,.85),inset 0 0 0 1px rgba(255,244,211,.25)}
+.hotbar .slot svg{width:26px;height:26px}
+.hotbar .slot .badge{position:absolute;right:2px;bottom:0;font-size:11px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000}
 </style>
 </head>
 <body>
-<div class="game">
-  <div class="header">
-    <h1>Землемер Нила</h1>
-    <div class="subtitle">Испытание гарпедонапта · вид от первого лица — сверху не подглядеть</div>
+<div class="stage" id="stage">
+  <div class="loading" id="loading">Натягиваем верёвку…</div>
+  <div class="hudTop">
+    <div class="reticle-note">Клик — обзор мышью, прицел в центре наводится поворотом головы. ПКМ / тап — вбить колышек. Рука достаёт не дальше 10 м — подходи ближе.</div>
+    <div class="statsLine">
+      <span>Колышков <b id="count">0 / 3</b></span>
+      <span>Стороны <b id="sides">—</b></span>
+      <span>Угол <b id="angle">—</b></span>
+      <span>Формула <b id="formula">—</b></span>
+    </div>
+    <div class="toolbar" id="toolbar">
+      <button class="ui" id="check">Проверить угол</button>
+      <button class="ui secondary" id="undo">Убрать последний</button>
+      <button class="ui" id="clear">Очистить поле</button>
+      <button class="ui secondary" id="soundToggle">🔊 Звук</button>
+      <button class="ui secondary" id="fsToggle">⛶ Экран</button>
+      <button class="ui horus" id="horus" disabled>𓂀 Взгляд сверху</button>
+      <button class="ui secondary" id="backToGround" hidden>⤓ Вернуться на землю</button>
+    </div>
   </div>
-
-  <div class="main">
-    <section class="panel">
-      <div class="stage" id="stage">
-        <div class="loading" id="loading">Натягиваем верёвку…</div>
-        <div class="hudTop">
-          <div class="reticle-note">Веди мышью / пальцем — метка ложится на землю. Клик / тап — вбить колышек. Рука достаёт не дальше 10 м — подходи ближе.</div>
-          <div class="toolbar" id="toolbar">
-            <button class="ui secondary" id="undo">Убрать последний</button>
-            <button class="ui" id="clear">Очистить поле</button>
-            <button class="ui secondary" id="soundToggle">🔊 Звук</button>
-            <button class="ui secondary" id="fsToggle">⛶ Экран</button>
-            <button class="ui horus" id="horus" disabled>𓂀 Взгляд сверху</button>
-            <button class="ui secondary" id="backToGround" hidden>⤓ Вернуться на землю</button>
-          </div>
-        </div>
-        <div class="dpad" id="dpad">
-          <span></span><button data-k="fwd">▲</button><span></span>
-          <button data-k="left">◀</button><span></span><button data-k="right">▶</button>
-          <span></span><button data-k="back">▼</button><span></span>
-        </div>
-        <div class="tilt">
-          <button data-k="up">👁▲</button>
-          <button data-k="down">👁▼</button>
-        </div>
-        <div class="toast" id="toast" hidden>
-          <div class="toastMsg" id="toastMsg"></div>
-          <div class="toastBtns">
-            <button id="toastYes">Да</button>
-            <button id="toastNo">Нет</button>
-          </div>
-        </div>
+  <div class="crosshair" id="crosshair"></div>
+  <div class="lookHint" id="lookHint">Клик — включить обзор мышью</div>
+  <div class="toast" id="toast" hidden>
+    <div class="toastMsg" id="toastMsg"></div>
+    <div class="toastBtns">
+      <button id="toastYes">Да</button>
+      <button id="toastNo">Нет</button>
+    </div>
+  </div>
+  <div class="controlsSplash" id="controlsSplash">
+    <div class="csTitle">Управление</div>
+    <div class="csRow"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> — движение</div>
+    <div class="csRow"><kbd>Shift</kbd> — бег</div>
+    <div class="csRow">Мышь — обзор и поворот (клик, чтобы включить)</div>
+    <div class="csRow">ПКМ — вбить колышек</div>
+  </div>
+  <div class="bottomHud">
+    <div id="success" class="success">
+      <b>𓂀 Верно!</b><br>
+      Ты построил прямой угол. Для треугольника со сторонами 3, 4 и 5:
+      3² + 4² = 5². Землемер может использовать такую конструкцию,
+      чтобы восстановить границу участка после разлива Нила — даже
+      стоя на земле, без обзора сверху.
+    </div>
+    <div id="hint" class="hint"></div>
+    <div class="hotbar" id="hotbar">
+      <div class="slot sel">
+        <svg viewBox="0 0 24 24"><polygon points="11,4 13,4 13,16 12,20 11,16" fill="#60351b"/><circle cx="12" cy="6" r="3" fill="#9b6a27"/></svg>
+        <span class="badge">∞</span>
       </div>
-      <div class="controls">
-        <button class="ui" id="check">Проверить угол</button>
-      </div>
-      <div class="stats">
-        <div class="stat">Колышков <b id="count">0 / 3</b></div>
-        <div class="stat">Стороны <b id="sides">—</b></div>
-        <div class="stat">Угол <b id="angle">—</b></div>
-        <div class="stat">Формула <b id="formula">—</b></div>
-      </div>
-      <div id="hint" class="hint"></div>
-      <div id="success" class="success">
-        <b>𓂀 Верно!</b><br>
-        Ты построил прямой угол. Для треугольника со сторонами 3, 4 и 5:
-        3² + 4² = 5². Землемер может использовать такую конструкцию,
-        чтобы восстановить границу участка после разлива Нила — даже
-        стоя на земле, без обзора сверху.
-      </div>
-      <div class="legend">Клавиатура: W/S или ▲▼ — шаг вперёд/назад, A/D — шаг в сторону, Q/E или ← → — повернуться, ↑ ↓ (или 👁▲ 👁▼) — чуть наклонить взгляд. Выше человеческого роста подняться нельзя. Пока не построишь треугольник, «Око Гора» недоступно: со своей точки на земле на глаз прямой угол не найти.</div>
-    </section>
-
-    <details class="mission">
-      <summary><h2>Задание фараона</h2><span class="arrow">▸</span></summary>
-      <div class="missionBody">
-      <div class="goal">
-        После разлива Нила границы поля исчезли. Тебе нужно восстановить
-        <b>прямой угол</b> между двумя границами участка — стоя прямо на
-        земле, без плана и без вида сверху.
-      </div>
-      <div class="parchment">
-        <b>Кто такой гарпедонапт</b><br>
-        <i>Гарпедонапт</i> (от др.-греч. ἁρπεδονάπτης — «натягивающий
-        верёвку») — древнеегипетский землемер и планировщик, который
-        измерял земельные участки и размечал фундаменты храмов и других
-        сооружений с помощью размеченных верёвок.
-      </div>
-      <div class="parchment">
-        <b>Секрет верёвки</b><br>
-        У тебя есть верёвка с <b>12 узлами</b>. Раздели её на отрезки
-        <b>3 : 4 : 5</b> и натяни между тремя колышками.
-        Если всё сделано правильно, угол получится 90°.
-      </div>
-      <div class="parchment">
-        <b>Как играть</b><br>
-        1. Поставь колышек A — где угодно.<br>
-        2. Веди руку от A: канат AB (5 узлов) провисает, пока не
-        натянут до конца, и дальше своей длины не пускает. Отпусти B.<br>
-        3. Тяни к C — сразу два каната (BC и замыкающий AC) провисают,
-        пока не натянуты до конца, и не пускают дальше своей длины.<br>
-        4. Нажми «Проверить угол», а затем «Око Гора», чтобы наконец
-        глянуть сверху и убедиться в результате.
-      </div>
-      <div class="parchment">
-        <b>Подсказка</b><br>
-        Не обязательно угадывать угол глазами — тем более что сверху
-        не видно. Проверь стороны:
-        <br><br><b>a² + b² = c²</b>
-      </div>
-      </div>
-    </details>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+    </div>
   </div>
 </div>
 
@@ -182,7 +134,8 @@ var count=document.getElementById('count'), sides=document.getElementById('sides
     success=document.getElementById('success'), hint=document.getElementById('hint'),
     horusBtn=document.getElementById('horus'), soundToggle=document.getElementById('soundToggle'),
     toast=document.getElementById('toast'), toastMsg=document.getElementById('toastMsg'),
-    toastYes=document.getElementById('toastYes'), toastNo=document.getElementById('toastNo');
+    toastYes=document.getElementById('toastYes'), toastNo=document.getElementById('toastNo'),
+    crosshair=document.getElementById('crosshair'), lookHint=document.getElementById('lookHint');
 
 if(typeof THREE==='undefined'){
   loading.textContent='Не удалось загрузить 3D-библиотеку. Проверь соединение и перезагрузи страницу.';
@@ -258,7 +211,7 @@ soundToggle.onclick=function(){
 // check) — this just stretches the *world* it's placed in, so the plot
 // reads as a real field to walk across instead of a tabletop diorama.
 var UNIT=6;
-var FIELD=6.5*UNIT;       // radius of the (circular) playable plot, world metres
+var FIELD=7.8*UNIT;       // radius of the (circular) playable plot, world metres (original 6.5*UNIT × 1.2)
 function clampCircle(x,z,limit){
   var d=Math.hypot(x,z);
   if(d<=limit) return {x:x,z:z};
@@ -358,8 +311,9 @@ var groundSize=70*UNIT;
 var sandTex=sandTextures();
 sandTex.diffuse.repeat.set(groundSize/22,groundSize/22);
 sandTex.bump.repeat.set(groundSize/3,groundSize/3);
+var groundGeo=new THREE.PlaneGeometry(groundSize,groundSize,160,160);
 var ground=new THREE.Mesh(
-  new THREE.PlaneGeometry(groundSize,groundSize),
+  groundGeo,
   new THREE.MeshStandardMaterial({map:sandTex.diffuse,bumpMap:sandTex.bump,bumpScale:.035,roughness:1})
 );
 ground.rotation.x=-Math.PI/2;
@@ -404,6 +358,43 @@ pyramid(13*UNIT,21*UNIT,5.4*UNIT,7.6*UNIT,0xc4924a);
   var cap=new THREE.Mesh(new THREE.ConeGeometry(0.55*UNIT,0.9*UNIT,4),new THREE.MeshStandardMaterial({color:0xd9a94f,roughness:.7}));
   cap.rotation.y=Math.PI/4;cap.position.y=5.45*UNIT;g.add(cap);
   g.position.set(9*UNIT,0,17*UNIT);scene.add(g);
+})();
+
+// ---- dunes outside the playable plot ----
+// the plot itself (and the ring the player can actually walk on, FIELD +
+// 1.5*UNIT — see clampCircle(...,lim) in animate()) stays dead flat so the
+// rope geometry/right-angle math is exact; beyond that, raise real sandy
+// relief so the desert doesn't read as an infinite tabletop. The river band
+// and the ground under each pyramid/obelisk are kept flat too, so nothing
+// pokes through or floats above a dune.
+(function(){
+  var walkLim=FIELD+UNIT*1.5;
+  var reliefStart=walkLim+UNIT*2;       // flat until safely past where you can walk
+  var reliefFull=groundSize*0.46;       // full dune height by here — gentler, longer climb
+  var duneMax=UNIT*0.85;                // much lower dunes — subtle relief, not hills
+  var riverHalf=4.5*UNIT+UNIT*1.5;      // river plane is 9*UNIT tall, plus a flat margin
+  var landmarks=[[-16*UNIT,20*UNIT,6.2*UNIT],[-6*UNIT,23*UNIT,4.4*UNIT],[13*UNIT,21*UNIT,5.4*UNIT],[9*UNIT,17*UNIT,1.2*UNIT]];
+  var pos=groundGeo.attributes.position;
+  for(var i=0;i<pos.count;i++){
+    var lx=pos.getX(i), ly=pos.getY(i); // plane's local XY
+    var wx=lx, wz=-ly;                   // world X/Z once the plane is rotated flat
+    var r=Math.hypot(lx,ly);
+    if(r<=reliefStart) continue;
+    if(Math.abs(wz-RIVER_Z)<riverHalf) continue; // flat river bed/banks
+    var nearLandmark=false;
+    for(var p=0;p<landmarks.length;p++){
+      var dx=wx-landmarks[p][0], dz=wz-landmarks[p][1];
+      if(Math.hypot(dx,dz)<landmarks[p][2]*1.3){ nearLandmark=true; break; }
+    }
+    if(nearLandmark) continue;
+    var t=Math.min(1,(r-reliefStart)/(reliefFull-reliefStart));
+    t=t*t*(3-2*t); // smoothstep
+    var n=fbm(lx/(UNIT*6),ly/(UNIT*6),3,1); // ~[-1,1] — broader, smoother waves
+    var h=(n*0.5+0.5)*duneMax*t; // dunes only rise, never dip below the flat plot
+    pos.setZ(i,h); // local Z becomes world Y (height) once the plane is rotated flat
+  }
+  pos.needsUpdate=true;
+  groundGeo.computeVertexNormals();
 })();
 
 // reeds near the water (real-world sized plants — only their spread scales)
@@ -641,7 +632,11 @@ function ropeMesh(a,b,slackUnits,tautHex,slackHex,radius,knots,opacity){
   var group=new THREE.Group();group.add(tube);
   if(knots){
     for(var k=1;k<knots;k++){
-      var p=curve.getPoint(k/knots);
+      // getPointAt (arc-length parametrisation), not getPoint (raw t) — with
+      // sag the curve bows, and raw-t sampling bunches markers unevenly near
+      // the ends; arc-length sampling keeps every knot segment the same
+      // physical length along the rope regardless of how much it's sagging
+      var p=curve.getPointAt(k/knots);
       var dot=new THREE.Mesh(new THREE.SphereGeometry(.165,8,8),new THREE.MeshStandardMaterial({color:0xd6a44e}));
       dot.position.copy(p);group.add(dot);
     }
@@ -671,12 +666,12 @@ function rebuildFinishedRopes(){
       var deg=angleAtC();
       if(deg===null||Math.abs(deg-90)>1) finishedSlackHex=ROPE_TAUT_BAD;
     }
-    var r1=ropeMesh(A,B,AB_LEN-kdist(A,B),ROPE_TAUT_NEUTRAL,finishedSlackHex,.05,4);
+    var r1=ropeMesh(A,B,AB_LEN-kdist(A,B),ROPE_TAUT_NEUTRAL,finishedSlackHex,.05,AB_LEN);
     scene.add(r1);ropeMeshes.push(r1);
     if(pts.length>=3){
       var C=pts[2];
-      var r2=ropeMesh(B,C,BC_LEN-kdist(B,C),ROPE_TAUT_NEUTRAL,finishedSlackHex,.05,4);
-      var r3=ropeMesh(A,C,AC_LEN-kdist(A,C),ROPE_TAUT_NEUTRAL,finishedSlackHex,.05,4);
+      var r2=ropeMesh(B,C,BC_LEN-kdist(B,C),ROPE_TAUT_NEUTRAL,finishedSlackHex,.05,BC_LEN);
+      var r3=ropeMesh(A,C,AC_LEN-kdist(A,C),ROPE_TAUT_NEUTRAL,finishedSlackHex,.05,AC_LEN);
       scene.add(r2);scene.add(r3);ropeMeshes.push(r2,r3);
     }
     if(pts.length===4){
@@ -763,11 +758,8 @@ function updatePreview(){
 }
 
 function updateHint(){
-  if(outOfReachNow){
-    hint.innerHTML='Слишком далеко — рука достаёт не дальше <b>10 м</b>. Подойди ближе к месту колышка.';
-    hint.classList.add('show','warn');
-    return;
-  }
+  crosshair.classList.toggle('hide', horusMode || !canPlacePeg());
+  crosshair.classList.toggle('warn', !!outOfReachNow);
   hint.classList.remove('warn');
   if(pts.length===0){hint.classList.remove('show');}
   else if(pts.length===1){
@@ -799,10 +791,6 @@ function updateStats(){
 }
 
 // ---------- input: mouse/touch aims & places pegs; buttons move/look ----------
-function ndcFromEvent(clientX,clientY){
-  var r=renderer.domElement.getBoundingClientRect();
-  return {x:((clientX-r.left)/r.width)*2-1, y:-((clientY-r.top)/r.height)*2+1};
-}
 var rayc=new THREE.Raycaster();
 function groundHit(ndc){
   rayc.setFromCamera(ndc,camera);
@@ -812,16 +800,16 @@ function groundHit(ndc){
   if(t<0) return null;
   return new THREE.Vector3(o.x+dir.x*t,0,o.z+dir.z*t);
 }
-function updateHoverFromEvent(e){
-  if(!canPlacePeg()||horusMode) return;
-  var touch=e.touches&&e.touches[0];
-  var cx=touch?touch.clientX:e.clientX, cy=touch?touch.clientY:e.clientY;
-  var h=groundHit(ndcFromEvent(cx,cy));
-  if(h){hover=h;updatePreview();}
+// Minecraft-style aiming: the crosshair is fixed at the centre of the
+// screen, and the aim point is whatever it's pointing at — the player aims
+// by turning (Q/E, ◀▶), not by moving the mouse. Recomputed every frame.
+var CENTER_NDC={x:0,y:0};
+function updateCenterAim(){
+  if(!canPlacePeg()||horusMode){ if(hover){hover=null;updatePreview();} return; }
+  var h=groundHit(CENTER_NDC);
+  hover=h;
+  updatePreview();
 }
-renderer.domElement.addEventListener('pointermove',updateHoverFromEvent);
-renderer.domElement.addEventListener('touchmove',updateHoverFromEvent,{passive:true});
-renderer.domElement.addEventListener('pointerleave',function(){hover=null;updatePreview();});
 
 function placePeg(){
   if(!canPlacePeg()||horusMode||!hover) return;
@@ -841,8 +829,35 @@ function placePeg(){
   if(pts.length===3 && phase==='placing') afterTriangleBuilt();
   else if(pts.length===4 && phase==='placingFourth') afterFourthPlaced();
 }
-renderer.domElement.addEventListener('click',placePeg);
+renderer.domElement.addEventListener('mousedown',function(e){ if(e.button===2){ e.preventDefault(); placePeg(); } });
 renderer.domElement.addEventListener('touchend',function(e){ e.preventDefault(); placePeg(); },{passive:false});
+stage.addEventListener('contextmenu',function(e){ e.preventDefault(); });
+
+// ---- mouse-look (Pointer Lock): left-click the scene to grab the mouse,
+// then moving it turns the camera, same as Q/E/◀▶ but continuous. Esc (or
+// the browser) releases it; clicking again re-grabs it. ----
+var pointerLocked=false;
+var MOUSE_SENS=0.0022;
+function requestLook(){
+  if(horusMode) return;
+  var el=renderer.domElement;
+  (el.requestPointerLock||el.mozRequestPointerLock||el.webkitRequestPointerLock||function(){}).call(el);
+}
+renderer.domElement.addEventListener('mousedown',function(e){ if(e.button===0 && !pointerLocked) requestLook(); });
+function onPointerLockChange(){
+  pointerLocked = (document.pointerLockElement||document.mozPointerLockElement||document.webkitPointerLockElement)===renderer.domElement;
+  lookHint.classList.toggle('hide', pointerLocked);
+}
+document.addEventListener('pointerlockchange',onPointerLockChange);
+document.addEventListener('mozpointerlockchange',onPointerLockChange);
+document.addEventListener('webkitpointerlockchange',onPointerLockChange);
+document.addEventListener('mousemove',function(e){
+  if(!pointerLocked||horusMode) return;
+  var mx=e.movementX||e.mozMovementX||e.webkitMovementX||0;
+  var my=e.movementY||e.mozMovementY||e.webkitMovementY||0;
+  yaw-=mx*MOUSE_SENS;
+  pitch=Math.max(PITCH_MIN,Math.min(PITCH_MAX,pitch-my*MOUSE_SENS));
+});
 
 document.getElementById('undo').onclick=function(){
   toast.hidden=true; phase='placing';
@@ -867,38 +882,45 @@ document.getElementById('check').onclick=function(){
   if(!ok) alert('Пока не прямой угол — какая-то верёвка ещё провисает или отрезки не 3:4:5.');
 };
 
-// ---- movement / look (keys + on-screen d-pad; never lets pitch reach top-down) ----
+// ---- movement (WASD only; turning/tilting is mouse-look via Pointer Lock — never lets pitch reach top-down) ----
 var PITCH_MIN=-1.05, PITCH_MAX=0.5;
 var keys={};
 // e.key depends on the active keyboard layout (on a Cyrillic layout the
 // physical W/A/S/D keys report "ц/ф/ы/в", not "w/a/s/d"), so movement keys
 // are read from e.code — the physical key position — which is layout-proof.
-var CODE_MAP={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyQ:'q',KeyE:'e',ArrowUp:'arrowup',ArrowDown:'arrowdown',ArrowLeft:'arrowleft',ArrowRight:'arrowright'};
-var GAME_CODES=['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'];
+var CODE_MAP={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',ShiftLeft:'shift',ShiftRight:'shift'};
+var GAME_CODES=['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight',
+  'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9'];
 window.addEventListener('keydown',function(e){
   var k=CODE_MAP[e.code]||e.key.toLowerCase();
   keys[k]=true;
-  if(k==='arrowup') keys.up=true;
-  if(k==='arrowdown') keys.down=true;
+  // digit row (by physical code, layout-proof) picks a hotbar slot directly
+  var digitMatch=/^Digit([1-9])$/.exec(e.code);
+  if(digitMatch) selectSlot(parseInt(digitMatch[1],10)-1);
   if(GAME_CODES.indexOf(e.code)!==-1) e.preventDefault(); // stop the page from scrolling under the game
 });
 window.addEventListener('keyup',function(e){
   var k=CODE_MAP[e.code]||e.key.toLowerCase();
   keys[k]=false;
-  if(k==='arrowup') keys.up=false;
-  if(k==='arrowdown') keys.down=false;
 });
+// ---- hotbar slot selection: mouse wheel and 1-9 keys (Minecraft-style) ----
+var hotbarSlots=Array.prototype.slice.call(document.querySelectorAll('.hotbar .slot'));
+var selectedSlot=0;
+function selectSlot(i){
+  selectedSlot=((i%hotbarSlots.length)+hotbarSlots.length)%hotbarSlots.length;
+  hotbarSlots.forEach(function(s,idx){ s.classList.toggle('sel',idx===selectedSlot); });
+}
+stage.addEventListener('wheel',function(e){
+  e.preventDefault();
+  selectSlot(selectedSlot+(e.deltaY>0?1:-1));
+},{passive:false});
+
 // keyboard events need the stage to actually have focus first
 stage.setAttribute('tabindex','0');
 stage.style.outline='none';
 stage.addEventListener('pointerdown',function(){stage.focus();});
 window.addEventListener('load',function(){stage.focus();});
 stage.focus();
-document.querySelectorAll('.dpad button,.tilt button').forEach(function(btn){
-  var k=btn.getAttribute('data-k');
-  ['pointerdown'].forEach(function(ev){btn.addEventListener(ev,function(e){e.preventDefault();keys[k]=true;});});
-  ['pointerup','pointerleave','pointercancel'].forEach(function(ev){btn.addEventListener(ev,function(){keys[k]=false;});});
-});
 function isDown(k){return !!keys[k];}
 
 var backToGroundBtn=document.getElementById('backToGround');
@@ -908,6 +930,7 @@ document.getElementById('horus').onclick=function(){
   savedCam={yaw:yaw,pitch:pitch,pos:camPos.clone()};
   horusT=0;
   backToGroundBtn.hidden=false;
+  (document.exitPointerLock||function(){}).call(document);
 };
 backToGroundBtn.onclick=function(){
   if(!horusMode) return;
@@ -933,12 +956,9 @@ function animate(){
     pitch=savedCam.pitch+(targetPitch-savedCam.pitch)*e;
     camPos.lerpVectors(savedCam.pos,targetPos,e);
   }else{
-    var turnSpeed=1.5,pitchSpeed=1.1,speed=4.3;
-    if(isDown('left')||isDown('arrowleft')||isDown('q')) yaw+=turnSpeed*dt;
-    if(isDown('right')||isDown('arrowright')||isDown('e')) yaw-=turnSpeed*dt;
-    if(isDown('up')) pitch=Math.min(PITCH_MAX,pitch+pitchSpeed*dt);
-    if(isDown('down')) pitch=Math.max(PITCH_MIN,pitch-pitchSpeed*dt);
-    var fwd=(isDown('fwd')||isDown('w')?1:0)-(isDown('back')||isDown('s')?1:0);
+    var speed=isDown('shift')?7.4:4.3; // Shift — бег
+    // turning/tilting is mouse-look only now (see Pointer Lock section below)
+    var fwd=isDown('w')?1:isDown('s')?-1:0;
     var strafe=(isDown('d')?1:0)-(isDown('a')?1:0);
     if(fwd||strafe){
       var fx=-Math.sin(yaw), fz=-Math.cos(yaw);
@@ -948,11 +968,11 @@ function animate(){
       var lim=FIELD+UNIT*1.5;
       var walkClamped=clampCircle(camPos.x,camPos.z,lim);
       camPos.x=walkClamped.x;camPos.z=walkClamped.z;
-      if(hover) updatePreview(); // walking changes distance-to-target, so re-check reach live
     }
   }
   camera.rotation.y=yaw;camera.rotation.x=pitch;
   camera.position.copy(camPos);
+  updateCenterAim(); // crosshair-style aim: recompute every frame from screen centre
   renderer.render(scene,camera);
 }
 
@@ -986,6 +1006,10 @@ fsToggle.onclick=function(){
 loading.classList.add('hide');
 updateStats();
 animate();
+
+// controls splash — centred, fades out 5s after it appears
+var controlsSplash=document.getElementById('controlsSplash');
+setTimeout(function(){ controlsSplash.classList.add('hide'); },5000);
 })();
 </script>
 </body>
